@@ -7,34 +7,34 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.room.Room
 import com.example.workmate.data.api.RetrofitInstance
 import com.example.workmate.data.db.AppDatabase
 import com.example.workmate.data.repository.CharacterRepository
 import com.example.workmate.databinding.FragmentCharacterListBinding
 import kotlinx.coroutines.flow.collectLatest
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
-import androidx.room.Room
 
-// Фрагмент отображает список персонажей с поддержкой Pull-to-Refresh и пагинацией
+// Фрагмент отображает список персонажей с поддержкой Pull-to-Refresh
 class CharacterListFragment : Fragment() {
 
     private var _binding: FragmentCharacterListBinding? = null
-    private val binding get() = _binding!!
+    private val binding get() = _binding!! // Привязка к XML через ViewBinding
 
-    private lateinit var adapter: CharacterAdapter
+    private lateinit var adapter: CharacterAdapter // Адаптер с поддержкой ListAdapter
 
-    // ViewModel инициализируется вручную (без DI)
+    // Создаём ViewModel вручную (без DI), передаём репозиторий
     private val viewModel: CharacterViewModel by viewModels {
         val db = Room.databaseBuilder(
-            requireContext().applicationContext, // Получаем контекст приложения
-            AppDatabase::class.java,              // Класс базы данных
-            "app_database"                        // Имя файла БД
+            requireContext().applicationContext,       // Контекст приложения
+            AppDatabase::class.java,                   // Класс базы данных
+            "app_database"                             // Имя файла базы
         ).build()
-        val repo = CharacterRepository(RetrofitInstance.api, db.characterDao()) // Создаём репозиторий
-        CharacterViewModelFactory(repo) // Передаём репозиторий во ViewModel через фабрику
+        val repo = CharacterRepository(RetrofitInstance.api, db.characterDao())
+        CharacterViewModelFactory(repo) // Фабрика для ViewModel
     }
 
     override fun onCreateView(
@@ -42,76 +42,69 @@ class CharacterListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // Привязываем layout через ViewBinding
-        _binding = FragmentCharacterListBinding.inflate(inflater, container, false)
+        _binding = FragmentCharacterListBinding.inflate(inflater, container, false) // Инфлейтим XML с помощью ViewBinding
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Настройка адаптера и обработка нажатий на персонажа
-        adapter = CharacterAdapter(emptyList()) { character ->
-            // Пока просто показываем имя персонажа (в будущем — откроем экран деталей)
+        // Настройка RecyclerView
+        adapter = CharacterAdapter { character ->
+            // Обработка нажатия на персонажа (временно Toast)
             Toast.makeText(requireContext(), character.name, Toast.LENGTH_SHORT).show()
         }
 
-        // RecyclerView с GridLayout на 2 колонки
-        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
-        binding.recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2) // Сетка 2 колонки
+        binding.recyclerView.adapter = adapter // Назначаем адаптер
 
-        // Слушатель для Pull-to-Refresh
+        // Обработка Pull-to-Refresh
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.refresh() // Обновляем данные (сброс на первую страницу)
+            viewModel.refreshCharacters() // Обновить данные вручную
         }
 
         // Подписка на список персонажей
         lifecycleScope.launch {
-            viewModel.characters.collectLatest { characters ->
-                adapter.submitList(characters) // Обновляем данные адаптера
+            viewModel.characters.collectLatest { list ->
+                adapter.submitList(list) // Передаём список в ListAdapter
             }
         }
 
-        // Подписка на статус загрузки — для отображения/скрытия индикатора
+        // Подписка на индикатор загрузки
         lifecycleScope.launch {
-            viewModel.isLoading.collectLatest { loading ->
-                binding.swipeRefreshLayout.isRefreshing = loading
+            viewModel.isLoading.collectLatest { isLoading ->
+                binding.swipeRefreshLayout.isRefreshing = isLoading // Показываем/скрываем спиннер
             }
         }
 
-        // Подписка на сообщения об ошибках
+        // Подписка на ошибки
         lifecycleScope.launch {
             viewModel.errorMessage.collectLatest { message ->
                 message?.let {
-                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() // Показываем ошибку
                 }
             }
         }
 
-        // Слушатель прокрутки — для автозагрузки новых страниц
+        // Пагинация при достижении конца списка
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
-
-                val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                val layoutManager = recyclerView.layoutManager as? GridLayoutManager ?: return
                 val totalItemCount = layoutManager.itemCount
                 val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
-
-                val isAtEnd = lastVisibleItem + 6 >= totalItemCount // Заранее грузим на ~6 элементов до конца
-                val shouldLoadMore = isAtEnd && !viewModel.isLoading.value
-
-                if (shouldLoadMore) {
+                if (lastVisibleItem + 5 >= totalItemCount) {
                     viewModel.loadCharacters() // Загружаем следующую страницу
                 }
             }
         })
 
-        // Первая загрузка данных
+        // Загрузить первую страницу при открытии экрана
         viewModel.loadCharacters()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Очищаем binding при уничтожении view
+        _binding = null // Освобождаем привязку во избежание утечек памяти
     }
 }

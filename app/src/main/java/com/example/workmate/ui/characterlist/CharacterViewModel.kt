@@ -74,7 +74,7 @@ class CharacterViewModel(
     }
 
     // Метод для перезагрузки списка с первой страницы (например, по свайпу)
-    fun refresh() {
+    fun refreshCharacters() {
         currentPage = 1
         isLastPage = false
         loadCharacters()
