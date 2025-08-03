@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.workmate.data.api.RetrofitInstance
 import com.example.workmate.data.db.AppDatabase
 import com.example.workmate.data.repository.CharacterRepository
@@ -17,7 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import androidx.room.Room
 
-// Фрагмент отображает список персонажей с поддержкой Pull-to-Refresh
+// Фрагмент отображает список персонажей с поддержкой Pull-to-Refresh и пагинацией
 class CharacterListFragment : Fragment() {
 
     private var _binding: FragmentCharacterListBinding? = null
@@ -25,15 +26,15 @@ class CharacterListFragment : Fragment() {
 
     private lateinit var adapter: CharacterAdapter
 
-    // Создаём ViewModel вручную (без DI), передаём репозиторий
+    // ViewModel инициализируется вручную (без DI)
     private val viewModel: CharacterViewModel by viewModels {
         val db = Room.databaseBuilder(
-            requireContext().applicationContext, // Контекст приложения
+            requireContext().applicationContext, // Получаем контекст приложения
             AppDatabase::class.java,              // Класс базы данных
-            "app_database"                        // Имя файла базы
-        ).build() // заменим на нормальную инициализацию позже
-        val repo = CharacterRepository(RetrofitInstance.api, db.characterDao())
-        CharacterViewModelFactory(repo)
+            "app_database"                        // Имя файла БД
+        ).build()
+        val repo = CharacterRepository(RetrofitInstance.api, db.characterDao()) // Создаём репозиторий
+        CharacterViewModelFactory(repo) // Передаём репозиторий во ViewModel через фабрику
     }
 
     override fun onCreateView(
@@ -41,6 +42,7 @@ class CharacterListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Привязываем layout через ViewBinding
         _binding = FragmentCharacterListBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -48,35 +50,36 @@ class CharacterListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Настройка RecyclerView
+        // Настройка адаптера и обработка нажатий на персонажа
         adapter = CharacterAdapter(emptyList()) { character ->
-            // TODO: Обработка нажатия на персонажа (открыть детали)
+            // Пока просто показываем имя персонажа (в будущем — откроем экран деталей)
             Toast.makeText(requireContext(), character.name, Toast.LENGTH_SHORT).show()
         }
 
+        // RecyclerView с GridLayout на 2 колонки
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.recyclerView.adapter = adapter
 
-        // Обработка Pull-to-Refresh
+        // Слушатель для Pull-to-Refresh
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.loadCharacters() // обновить список
+            viewModel.refresh() // Обновляем данные (сброс на первую страницу)
         }
 
-        // Подписка на данные из ViewModel
+        // Подписка на список персонажей
         lifecycleScope.launch {
-            viewModel.characters.collectLatest {
-                adapter.submitList(it)
+            viewModel.characters.collectLatest { characters ->
+                adapter.submitList(characters) // Обновляем данные адаптера
             }
         }
 
-        // Подписка на загрузку
+        // Подписка на статус загрузки — для отображения/скрытия индикатора
         lifecycleScope.launch {
             viewModel.isLoading.collectLatest { loading ->
                 binding.swipeRefreshLayout.isRefreshing = loading
             }
         }
 
-        // Подписка на ошибки
+        // Подписка на сообщения об ошибках
         lifecycleScope.launch {
             viewModel.errorMessage.collectLatest { message ->
                 message?.let {
@@ -85,12 +88,30 @@ class CharacterListFragment : Fragment() {
             }
         }
 
-        // Загрузить данные при первом открытии
+        // Слушатель прокрутки — для автозагрузки новых страниц
+        binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+
+                val layoutManager = recyclerView.layoutManager as GridLayoutManager
+                val totalItemCount = layoutManager.itemCount
+                val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
+
+                val isAtEnd = lastVisibleItem + 6 >= totalItemCount // Заранее грузим на ~6 элементов до конца
+                val shouldLoadMore = isAtEnd && !viewModel.isLoading.value
+
+                if (shouldLoadMore) {
+                    viewModel.loadCharacters() // Загружаем следующую страницу
+                }
+            }
+        })
+
+        // Первая загрузка данных
         viewModel.loadCharacters()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null // Очищаем binding при уничтожении view
     }
 }

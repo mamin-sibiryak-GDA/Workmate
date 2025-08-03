@@ -28,31 +28,56 @@ class CharacterViewModel(
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
 
-    // Метод запуска загрузки данных (например, при запуске экрана или pull-to-refresh)
+    // Храним номер текущей страницы
+    private var currentPage = 1
+
+    // Флаг, что достигли последней страницы (info.next == null)
+    private var isLastPage = false
+
+    // Метод запуска загрузки данных (например, при запуске экрана или скролле до конца)
     fun loadCharacters(
-        page: Int = 1,
         name: String? = null,
         status: String? = null,
         species: String? = null,
         gender: String? = null
     ) {
+        // Если уже идёт загрузка или достигли конца, ничего не делаем
+        if (_isLoading.value || isLastPage) return
+
         viewModelScope.launch {
             try {
-                _isLoading.value = true          // Показать прогресс
-                _errorMessage.value = null       // Сбросить ошибку
+                _isLoading.value = true
+                _errorMessage.value = null
 
-                repository.refreshCharacters(
-                    page = page,
+                // Загружаем текущую страницу
+                val response = repository.refreshCharacters(
+                    page = currentPage,
                     name = name,
                     status = status,
                     species = species,
                     gender = gender
                 )
+
+                // Если следующей страницы нет, выставляем флаг
+                if (response.info.next == null) {
+                    isLastPage = true
+                } else {
+                    currentPage++ // иначе увеличиваем счётчик страницы
+                }
+
             } catch (e: Exception) {
-                _errorMessage.value = e.message  // Показать ошибку
+                _errorMessage.value = e.message
             } finally {
-                _isLoading.value = false         // Скрыть прогресс
+                _isLoading.value = false
             }
         }
     }
+
+    // Метод для перезагрузки списка с первой страницы (например, по свайпу)
+    fun refresh() {
+        currentPage = 1
+        isLastPage = false
+        loadCharacters()
+    }
 }
+

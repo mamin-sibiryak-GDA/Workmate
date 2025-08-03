@@ -3,6 +3,7 @@ package com.example.workmate.data.repository
 import com.example.workmate.data.api.CharacterApi
 import com.example.workmate.data.db.CharacterDao
 import com.example.workmate.model.Character
+import com.example.workmate.model.CharacterResponse
 import kotlinx.coroutines.flow.Flow
 
 // Репозиторий объединяет API и локальную БД (Room)
@@ -20,7 +21,7 @@ class CharacterRepository(
         status: String? = null,
         species: String? = null,
         gender: String? = null
-    ) {
+    ): CharacterResponse {
         // 1. Загружаем список с сервера с учётом фильтров
         val response = api.getCharacters(page, name, status, species, gender)
 
@@ -29,5 +30,9 @@ class CharacterRepository(
 
         // 3. Сохраняем новые данные в локальную БД
         dao.insertAll(response.results)
+
+        // 4. Возвращаем ответ с info.next
+        return response
     }
+
 }
