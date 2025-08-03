@@ -1,7 +1,9 @@
 package com.example.workmate.data.api
 
+import com.example.workmate.model.CharacterDetail
 import com.example.workmate.model.CharacterResponse
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 // Интерфейс описывает методы для запросов к API "Рик и Морти"
@@ -16,4 +18,8 @@ interface CharacterApi {
         @Query("species") species: String? = null,  // Фильтр по виду
         @Query("gender") gender: String? = null     // Фильтр по полу
     ): CharacterResponse // Возвращается объект-обёртка с результатами
+
+    @GET("character/{id}")
+    suspend fun getCharacterDetail(@Path("id") id: Int): CharacterDetail
+
 }

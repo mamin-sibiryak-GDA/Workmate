@@ -5,11 +5,30 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/characterListFragment">
 
-
     <!-- Стартовый экран — список персонажей -->
     <fragment
         android:id="@+id/characterListFragment"
         android:name="com.example.workmate.ui.characterlist.CharacterListFragment"
         android:label="Characters"
-        tools:layout="@layout/fragment_character_list" />
+        tools:layout="@layout/fragment_character_list">
+
+        <!-- Переход от списка к деталям -->
+        <action
+            android:id="@+id/action_characterListFragment_to_characterDetailFragment"
+            app:destination="@id/characterDetailFragment" />
+    </fragment>
+
+    <!-- Экран с деталями персонажа -->
+    <fragment
+        android:id="@+id/characterDetailFragment"
+        android:name="com.example.workmate.ui.characterdetail.CharacterDetailFragment"
+        android:label="Character Details"
+        tools:layout="@layout/fragment_character_detail">
+
+        <!-- Аргумент ID персонажа -->
+        <argument
+            android:name="characterId"
+            app:argType="integer"
+            android:defaultValue="1" />
+    </fragment>
 </navigation>
