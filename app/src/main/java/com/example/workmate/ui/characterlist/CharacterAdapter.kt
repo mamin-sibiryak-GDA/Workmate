@@ -14,31 +14,30 @@ import com.example.workmate.model.Character
 
 // Адаптер для отображения списка персонажей в RecyclerView
 class CharacterAdapter(
-    private val onItemClick: (Character) -> Unit // Обработчик клика по персонажу
+    private val onItemClick: (Character) -> Unit          // Обработчик клика по персонажу
 ) : ListAdapter<Character, CharacterAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
 
     // ViewHolder описывает одну карточку персонажа
     class CharacterViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val imageView: ImageView = itemView.findViewById(R.id.imageView)     // Изображение персонажа
-        val nameText: TextView = itemView.findViewById(R.id.nameText)        // Имя персонажа
-        val infoText: TextView = itemView.findViewById(R.id.infoText)        // Описание персонажа
+        val imageView: ImageView = itemView.findViewById(R.id.imageView)   // Картинка персонажа
+        val nameText: TextView = itemView.findViewById(R.id.nameText)      // Имя персонажа
+        val infoText: TextView = itemView.findViewById(R.id.infoText)      // Информация (вид, статус, пол)
     }
 
     // Создание ViewHolder из XML
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_character, parent, false) // Подключаем разметку карточки
+            .inflate(R.layout.item_character, parent, false)
         return CharacterViewHolder(view)
     }
 
     // Привязка данных к ViewHolder
     override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) {
-        val character = getItem(position) // Получаем персонажа по позиции
+        val character = getItem(position) // Получаем персонажа из списка
 
-        // Устанавливаем имя
-        holder.nameText.text = character.name
+        holder.nameText.text = character.name // Устанавливаем имя
 
-        // Форматируем описание через строку из ресурсов
+        // Используем ресурсную строку для infoText (вместо конкатенации)
         holder.infoText.text = holder.itemView.context.getString(
             R.string.character_info,
             character.species,
@@ -46,26 +45,26 @@ class CharacterAdapter(
             character.gender
         )
 
-        // Загружаем изображение с помощью Coil
+        // Загрузка изображения через Coil
         holder.imageView.load(character.image) {
-            crossfade(true) // Плавная анимация
-            placeholder(R.drawable.placeholder) // Заглушка
+            crossfade(true)                               // Анимация появления
+            placeholder(R.drawable.placeholder)           // Заглушка на время загрузки
         }
 
-        // Обработка клика по карточке
+        // Обработка нажатия на карточку — вызываем коллбек
         holder.itemView.setOnClickListener {
             onItemClick(character)
         }
     }
 
-    // Сравнение элементов списка для ListAdapter
+    // ViewHolder используют этот класс для определения отличий между элементами
     class CharacterDiffCallback : DiffUtil.ItemCallback<Character>() {
         override fun areItemsTheSame(oldItem: Character, newItem: Character): Boolean {
-            return oldItem.id == newItem.id // Сравниваем по уникальному ID
+            return oldItem.id == newItem.id // Элементы те же, если совпадает ID
         }
 
         override fun areContentsTheSame(oldItem: Character, newItem: Character): Boolean {
-            return oldItem == newItem // Проверяем равенство содержимого
+            return oldItem == newItem // Содержимое совпадает — можно не обновлять
         }
     }
 }

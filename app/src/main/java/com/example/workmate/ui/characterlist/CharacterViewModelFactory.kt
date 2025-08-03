@@ -19,3 +19,4 @@ class CharacterViewModelFactory(
         throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+

@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
@@ -49,12 +50,15 @@ class CharacterListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Настройка RecyclerView
+        // Настройка адаптера и обработка кликов
         adapter = CharacterAdapter { character ->
-            // Обработка нажатия на персонажа (временно Toast)
-            Toast.makeText(requireContext(), character.name, Toast.LENGTH_SHORT).show()
+            // Переход к деталям персонажа через Navigation Component
+            val action = CharacterListFragmentDirections
+                .actionCharacterListFragmentToCharacterDetailFragment(character.id)
+            findNavController().navigate(action)
         }
 
+        // Настройка RecyclerView
         binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2) // Сетка 2 колонки
         binding.recyclerView.adapter = adapter // Назначаем адаптер
 

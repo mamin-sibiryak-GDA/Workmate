@@ -11,3 +11,7 @@ data class CharacterDetail(
     val location: LocationInfo, // Текущая локация
     val image: String           // Ссылка на изображение
 )
+
+data class LocationInfo(
+    val name: String // Имя локации (например, "Earth")
+)

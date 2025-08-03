@@ -1,56 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/scrollView"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp">
 
+    <!-- ScrollView позволяет прокручивать контент, если он не помещается -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
+        <!-- Изображение персонажа -->
         <ImageView
             android:id="@+id/imageView"
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:scaleType="centerCrop"
-            android:contentDescription="@string/character_image" />
+            android:layout_marginBottom="16dp"
+            app:srcCompat="@drawable/placeholder" />
 
+        <!-- Имя персонажа -->
         <TextView
             android:id="@+id/nameText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
             android:textSize="24sp"
-            android:paddingTop="12dp" />
+            android:textStyle="bold"
+            android:layout_marginBottom="16dp" />
 
+        <!-- Статус -->
         <TextView
             android:id="@+id/statusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="8dp" />
+            android:layout_marginBottom="8dp" />
 
+        <!-- Вид -->
         <TextView
             android:id="@+id/speciesText"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
 
+        <!-- Пол -->
         <TextView
             android:id="@+id/genderText"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
 
+        <!-- Происхождение -->
         <TextView
             android:id="@+id/originText"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp" />
 
+        <!-- Текущее местоположение -->
         <TextView
             android:id="@+id/locationText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingBottom="16dp" />
+            android:layout_marginBottom="8dp" />
+
     </LinearLayout>
 </ScrollView>
