@@ -2,13 +2,19 @@ package com.example.workmate.ui.characterlist
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.room.Room
@@ -18,24 +24,28 @@ import com.example.workmate.data.repository.CharacterRepository
 import com.example.workmate.databinding.FragmentCharacterListBinding
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import com.example.workmate.R
 
-// Фрагмент отображает список персонажей с поддержкой Pull-to-Refresh
+// Фрагмент отображает список персонажей с поддержкой Pull-to-Refresh и фильтра
 class CharacterListFragment : Fragment() {
 
     private var _binding: FragmentCharacterListBinding? = null
-    private val binding get() = _binding!! // Привязка к XML через ViewBinding
+    private val binding get() = _binding!! // ViewBinding для доступа к XML
 
-    private lateinit var adapter: CharacterAdapter // Адаптер с поддержкой ListAdapter
+    private lateinit var adapter: CharacterAdapter // Адаптер списка
 
-    // Создаём ViewModel вручную (без DI), передаём репозиторий
+    // Получаем фильтры из аргументов навигации
+    private val args: CharacterListFragmentArgs by navArgs()
+
+    // ViewModel с репозиторием (без DI)
     private val viewModel: CharacterViewModel by viewModels {
         val db = Room.databaseBuilder(
-            requireContext().applicationContext,       // Контекст приложения
-            AppDatabase::class.java,                   // Класс базы данных
-            "app_database"                             // Имя файла базы
+            requireContext().applicationContext,
+            AppDatabase::class.java,
+            "app_database"
         ).build()
         val repo = CharacterRepository(RetrofitInstance.api, db.characterDao())
-        CharacterViewModelFactory(repo) // Фабрика для ViewModel
+        CharacterViewModelFactory(repo)
     }
 
     override fun onCreateView(
@@ -43,54 +53,49 @@ class CharacterListFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentCharacterListBinding.inflate(inflater, container, false) // Инфлейтим XML с помощью ViewBinding
+        _binding = FragmentCharacterListBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Настройка адаптера и обработка кликов
+        requireActivity().addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                // Подключаем меню
+                menuInflater.inflate(R.menu.character_list_menu, menu)
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_filter -> {
+                        // Навигация к фильтру
+                        val action = CharacterListFragmentDirections
+                            .actionCharacterListFragmentToCharacterFilterFragment()
+                        findNavController().navigate(action)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+
+        // Настраиваем адаптер с переходом к деталям по клику
         adapter = CharacterAdapter { character ->
-            // Переход к деталям персонажа через Navigation Component
             val action = CharacterListFragmentDirections
                 .actionCharacterListFragmentToCharacterDetailFragment(character.id)
             findNavController().navigate(action)
         }
 
-        // Настройка RecyclerView
-        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2) // Сетка 2 колонки
-        binding.recyclerView.adapter = adapter // Назначаем адаптер
+        binding.recyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.recyclerView.adapter = adapter
 
-        // Обработка Pull-to-Refresh
+        // Pull-to-refresh
         binding.swipeRefreshLayout.setOnRefreshListener {
-            viewModel.refreshCharacters() // Обновить данные вручную
+            viewModel.refreshCharacters()
         }
 
-        // Подписка на список персонажей
-        lifecycleScope.launch {
-            viewModel.characters.collectLatest { list ->
-                adapter.submitList(list) // Передаём список в ListAdapter
-            }
-        }
-
-        // Подписка на индикатор загрузки
-        lifecycleScope.launch {
-            viewModel.isLoading.collectLatest { isLoading ->
-                binding.swipeRefreshLayout.isRefreshing = isLoading // Показываем/скрываем спиннер
-            }
-        }
-
-        // Подписка на ошибки
-        lifecycleScope.launch {
-            viewModel.errorMessage.collectLatest { message ->
-                message?.let {
-                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show() // Показываем ошибку
-                }
-            }
-        }
-
-        // Пагинация при достижении конца списка
+        // Пагинация
         binding.recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
@@ -98,17 +103,47 @@ class CharacterListFragment : Fragment() {
                 val totalItemCount = layoutManager.itemCount
                 val lastVisibleItem = layoutManager.findLastVisibleItemPosition()
                 if (lastVisibleItem + 5 >= totalItemCount) {
-                    viewModel.loadCharacters() // Загружаем следующую страницу
+                    viewModel.loadCharacters()
                 }
             }
         })
 
-        // Загрузить первую страницу при открытии экрана
-        viewModel.loadCharacters()
+        // Слушаем список персонажей
+        lifecycleScope.launch {
+            viewModel.characters.collectLatest {
+                adapter.submitList(it)
+            }
+        }
+
+        // Слушаем загрузку
+        lifecycleScope.launch {
+            viewModel.isLoading.collectLatest { loading ->
+                binding.swipeRefreshLayout.isRefreshing = loading
+            }
+        }
+
+        // Слушаем ошибки
+        lifecycleScope.launch {
+            viewModel.errorMessage.collectLatest { message ->
+                message?.let {
+                    Toast.makeText(requireContext(), it, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        // Применяем фильтры, если они были переданы
+        viewModel.applyFilters(
+            name = args.name,
+            status = args.status,
+            species = args.species,
+            gender = args.gender
+        )
+
+
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null // Освобождаем привязку во избежание утечек памяти
+        _binding = null
     }
 }

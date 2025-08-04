@@ -1,5 +1,17 @@
 <resources>
     <string name="app_name">Workmate</string>
     <string name="character_image">Character Image</string>
-    <string name="character_info">%1$s | %2$s | %3$s</string>
+    <string name="character_info">%1$s | %2$s</string>
+    <string name="status_label">Status: %1$s</string>
+    <string name="species_label">Species: %1$s</string>
+    <string name="gender_label">Gender: %1$s</string>
+    <string name="origin_label">Origin: %1$s</string>
+    <string name="location_label">Location: %1$s</string>
+    <string name="name">Name</string>
+    <string name="status">Status</string>
+    <string name="species">Species</string>
+    <string name="gender">Gender</string>
+    <string name="apply_filter">Apply Filter</string>
+    <string name="clear">Clear</string>
+    <string name="filter">Filter</string>
 </resources>

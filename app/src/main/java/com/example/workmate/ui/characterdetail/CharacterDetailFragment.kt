@@ -18,6 +18,7 @@ import com.example.workmate.ui.characterlist.CharacterViewModel
 import com.example.workmate.ui.characterlist.CharacterViewModelFactory
 import kotlinx.coroutines.launch
 import androidx.room.Room
+import com.example.workmate.R
 
 // Фрагмент отображает детали конкретного персонажа
 class CharacterDetailFragment : Fragment() {
@@ -58,11 +59,11 @@ class CharacterDetailFragment : Fragment() {
                 // Отображаем данные персонажа в UI
                 binding.imageView.load(character.image) // Загружаем изображение через Coil
                 binding.nameText.text = character.name
-                binding.statusText.text = "Status: ${character.status}"
-                binding.speciesText.text = "Species: ${character.species}"
-                binding.genderText.text = "Gender: ${character.gender}"
-                binding.originText.text = "Origin: ${character.origin.name}"
-                binding.locationText.text = "Location: ${character.location.name}"
+                binding.statusText.text = getString(R.string.status_label, character.status)
+                binding.speciesText.text = getString(R.string.species_label, character.species)
+                binding.genderText.text = getString(R.string.gender_label, character.gender)
+                binding.originText.text = getString(R.string.origin_label, character.origin.name)
+                binding.locationText.text = getString(R.string.location_label, character.location.name)
 
             } catch (e: Exception) {
                 e.printStackTrace()

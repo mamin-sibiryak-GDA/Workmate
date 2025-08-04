@@ -5,30 +5,74 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/characterListFragment">
 
-    <!-- Стартовый экран — список персонажей -->
+    <!-- Главный экран со списком персонажей -->
     <fragment
         android:id="@+id/characterListFragment"
         android:name="com.example.workmate.ui.characterlist.CharacterListFragment"
         android:label="Characters"
         tools:layout="@layout/fragment_character_list">
 
-        <!-- Переход от списка к деталям -->
+        <!-- Переход к деталям персонажа -->
         <action
             android:id="@+id/action_characterListFragment_to_characterDetailFragment"
             app:destination="@id/characterDetailFragment" />
+
+        <!-- Переход к экрану фильтра -->
+        <action
+            android:id="@+id/action_characterListFragment_to_characterFilterFragment"
+            app:destination="@id/characterFilterFragment" />
+
+        <!-- Аргументы для фильтрации -->
+        <argument
+            android:name="name"
+            app:argType="string"
+            android:defaultValue=""
+            app:nullable="true" />
+        <argument
+            android:name="status"
+            app:argType="string"
+            android:defaultValue=""
+            app:nullable="true" />
+        <argument
+            android:name="species"
+            app:argType="string"
+            android:defaultValue=""
+            app:nullable="true" />
+        <argument
+            android:name="gender"
+            app:argType="string"
+            android:defaultValue=""
+            app:nullable="true" />
     </fragment>
 
-    <!-- Экран с деталями персонажа -->
+    <!-- 🧍 Экран деталей персонажа -->
     <fragment
         android:id="@+id/characterDetailFragment"
         android:name="com.example.workmate.ui.characterdetail.CharacterDetailFragment"
         android:label="Character Details"
         tools:layout="@layout/fragment_character_detail">
 
-        <!-- Аргумент ID персонажа -->
+        <!-- ID персонажа передаётся как аргумент -->
         <argument
             android:name="characterId"
             app:argType="integer"
             android:defaultValue="1" />
     </fragment>
+
+    <!-- Экран фильтрации персонажей -->
+    <fragment
+        android:id="@+id/characterFilterFragment"
+        android:name="com.example.workmate.ui.characterfilter.CharacterFilterFragment"
+        android:label="Filter"
+        tools:layout="@layout/fragment_character_filter">
+
+        <!-- Возврат к списку после применения фильтра -->
+        <action
+            android:id="@+id/action_characterFilterFragment_to_characterListFragment"
+            app:destination="@id/characterListFragment"
+            app:popUpTo="@id/characterListFragment"
+            app:popUpToInclusive="true" />
+
+    </fragment>
+
 </navigation>

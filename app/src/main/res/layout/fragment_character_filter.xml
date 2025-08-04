@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".ui.characterfilter.CharacterFilterFragment">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Поле ввода имени -->
+        <EditText
+            android:id="@+id/editName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/name"
+            android:autofillHints="name"
+            android:inputType="textPersonName"
+            android:textColorHint="@android:color/darker_gray"
+            android:textColor="@android:color/darker_gray"/>
+
+        <!-- Поле ввода статуса -->
+        <EditText
+            android:id="@+id/editStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/status"
+            android:autofillHints="none"
+            android:inputType="text"
+            android:textColorHint="@android:color/darker_gray"
+            android:textColor="@android:color/darker_gray" />
+
+        <!-- Поле ввода вида -->
+        <EditText
+            android:id="@+id/editSpecies"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/species"
+            android:autofillHints="none"
+            android:inputType="text"
+            android:textColorHint="@android:color/darker_gray"
+            android:textColor="@android:color/darker_gray"/>
+
+        <!-- Поле ввода пола -->
+        <EditText
+            android:id="@+id/editGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/gender"
+            android:autofillHints="none"
+            android:inputType="text"
+            android:textColorHint="@android:color/darker_gray"
+            android:textColor="@android:color/darker_gray"/>
+
+        <!-- Кнопка применения фильтра -->
+        <Button
+            android:id="@+id/buttonApply"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/apply_filter"
+            android:layout_marginTop="16dp"
+            android:background="@color/background2"/>
+
+        <!-- Кнопка очистки -->
+        <Button
+            android:id="@+id/buttonClear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/clear"
+            android:layout_marginTop="8dp"
+            android:background="@color/background2"/>
+
+    </LinearLayout>
+</ScrollView>
